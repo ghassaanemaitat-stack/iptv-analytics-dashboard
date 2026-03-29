@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>IPTV Traffic Dashboard – Live Analytics</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: system-ui, sans-serif; background: #0f1117; color: #e1e4e8; min-height: 100vh; padding: 2rem; }
+    h1 { font-size: 1.4rem; font-weight: 600; margin-bottom: 4px; }
+    .sub { font-size: 13px; color: #8b949e; margin-bottom: 1.5rem; }
+    .live-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #2ea043; margin-right: 6px; animation: pulse 1.5s infinite; }
+    @keyframes pulse { 0%,100%{opacity:1}50%{opacity:.2} }
+    .metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-bottom: 2rem; }
+    .card { background: #161b22; border: 1px solid #30363d; border-radius: 10px; padding: 1rem; }
+    .card-label { font-size: 12px; color: #8b949e; margin-bottom: 4px; }
+    .card-value { font-size: 24px; font-weight: 600; }
+    .section { font-size: 12px; color: #8b949e; text-transform: uppercase; letter-spacing: .06em; margin-bottom: 10px; font-weight: 600; }
+    .bar-row { display: flex; align-items: center; gap: 10px; margin-bottom: 9px; font-size: 13px; }
+    .bar-label { width: 90px; color: #c9d1d9; flex-shrink: 0; }
+    .bar-track { flex: 1; background: #21262d; border-radius: 4px; height: 8px; }
+    .bar-fill { height: 100%; border-radius: 4px; background: #2ea043; transition: width .8s ease; }
+    .bar-num { width: 36px; text-align: right; color: #8b949e; font-size: 12px; }
+    .feed { background: #161b22; border: 1px solid #30363d; border-radius: 10px; padding: 1rem; max-height: 200px; overflow-y: auto; margin-bottom: 2rem; }
+    .feed-row { display: flex; justify-content: space-between; font-size: 13px; padding: 5px 0; border-bottom: 1px solid #21262d; }
+    .feed-row:last-child { border-bottom: none; }
+    .footer { font-size: 12px; color: #8b949e; margin-top: 2rem; border-top: 1px solid #21262d; padding-top: 1rem; line-height: 2; }
+    .footer a { color: #58a6ff; text-decoration: none; }
+    .footer a:hover { text-decoration: underline; }
+    .updated { font-size: 11px; color: #8b949e; text-align: right; margin-top: 8px; }
+  </style>
+</head>
+<body>
+  <h1>📡 IPTV Traffic Dashboard</h1>
+  <p class="sub"><span class="live-dot"></span>Simulated live analytics — built with vanilla JS</p>
+
+  <div class="metrics">
+    <div class="card"><div class="card-label">Online now</div><div class="card-value" id="m-live">—</div></div>
+    <div class="card"><div class="card-label">Today's visits</div><div class="card-value" id="m-today">—</div></div>
+    <div class="card"><div class="card-label">Bounce rate</div><div class="card-value" id="m-bounce">—</div></div>
+    <div class="card"><div class="card-label">Avg. session</div><div class="card-value" id="m-avg">—</div></div>
+  </div>
+
+  <p class="section">Traffic by channel</p>
+  <div id="bars" style="margin-bottom:2rem;"></div>
+
+  <p class="section">Live visitor feed</p>
+  <div class="feed" id="feed"></div>
+
+  <p class="updated" id="updated"></p>
+
+  <!-- FOOTER WITH YOUR LINKS -->
+  <div class="footer">
+    <strong>About this project:</strong> Open-source IPTV analytics dashboard. Built to visualize streaming traffic patterns in real time.<br>
+    🌐 Website: <a href="https://YOURSITE.com" target="_blank">YOURSITE.com</a><br>
+    📺 IPTV Subscription: <a href="https://YOURSITE.com/iptv-subscription" target="_blank">Get IPTV</a><br>
+    📦 GitHub: <a href="https://github.com/YOURUSERNAME/iptv-analytics-dashboard" target="_blank">View source</a><br>
+    Built with ❤️ for the IPTV community.
+  </div>
+
+  <script>
+    const channels = ["Sports HD","Movies 4K","News Live","Kids Zone","PPV Events"];
+    const countries = [["MA","🇲🇦"],["FR","🇫🇷"],["US","🇺🇸"],["UK","🇬🇧"],["DE","🇩🇪"],["ES","🇪🇸"],["CA","🇨🇦"],["NL","🇳🇱"]];
+    const pages = ["/iptv-subscription","/channels","/pricing","/free-trial","/contact"];
+    let counts = [210,185,140,95,60];
+    let feedLog = [];
+    function rnd(a,b){return Math.floor(Math.random()*(b-a+1))+a;}
+    function tick(){
+      document.getElementById("m-live").textContent = rnd(42,89);
+      document.getElementById("m-today").textContent = (rnd(1,3)*1000+rnd(100,999)).toLocaleString();
+      document.getElementById("m-bounce").textContent = rnd(28,44)+"%";
+      document.getElementById("m-avg").textContent = rnd(4,9)+"m "+rnd(10,59)+"s";
+      counts = counts.map(c=>Math.max(10,c+rnd(-8,10)));
+      const max = Math.max(...counts);
+      document.getElementById("bars").innerHTML = channels.map((ch,i)=>`
+        <div class="bar-row">
+          <span class="bar-label">${ch}</span>
+          <div class="bar-track"><div class="bar-fill" style="width:${Math.round(counts[i]/max*100)}%"></div></div>
+          <span class="bar-num">${counts[i]}</span>
+        </div>`).join("");
+      if(Math.random()>0.3){
+        const [code,flag]=countries[rnd(0,countries.length-1)];
+        const now=new Date();
+        const ts=now.toLocaleTimeString();
+        feedLog.unshift({flag,code,page:pages[rnd(0,pages.length-1)],ts});
+        if(feedLog.length>12)feedLog.pop();
+        document.getElementById("feed").innerHTML=feedLog.map(r=>`
+          <div class="feed-row"><span>${r.flag} ${r.code} — ${r.page}</span><span style="color:#8b949e">${r.ts}</span></div>`).join("");
+      }
+      document.getElementById("updated").textContent="Last updated: "+new Date().toLocaleTimeString();
+    }
+    tick();
+    setInterval(tick,3000);
+  </script>
+</body>
+</html>
